@@ -57,7 +57,7 @@ export async function retrievePosition(options: any): Promise<RetrieveResult> {
   return new Promise((resolve, reject) => {
     setTimeout(() => {
       const where = options?.where;
-      if (Object.prototype.hasOwnProperty.call(where, 'parent')) {
+      if (where && Object.prototype.hasOwnProperty.call(where, 'parent')) {
         const parent = where.parent;
         const result: PositionType[] = [];
         for(let i = 0; i < sampleData.length; i++) {

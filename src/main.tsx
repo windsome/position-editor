@@ -5,18 +5,18 @@ import FullEditor from './editor/FullEditor';
 
 import './index.css';
 import { PositionType } from './editor/types';
-import { createPosition, retrievePosition, updatePosition } from './editor/demoData';
+import { createPosition, removePosition, retrievePosition, updatePosition } from './editor/demoData';
 
 async function save(record: Partial<PositionType>): Promise<PositionType> {
   if (record._id) {
-    return updatePosition(record._id, record);
+    return await updatePosition(record._id, record);
   } else {
-    return createPosition(record);
+    return await createPosition(record);
   }
 }
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    <FullEditor save={save} retrieve={retrievePosition}/>
+    <FullEditor save={save} remove={removePosition} retrieve={retrievePosition}/>
   </React.StrictMode>
 );

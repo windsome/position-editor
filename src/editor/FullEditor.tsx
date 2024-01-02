@@ -39,7 +39,7 @@ import { CSSProperties } from 'react';
 import Tree from 'rc-tree';
 import "rc-tree/assets/index.css"
 import './tools.css';
-import { FullEditorProps, Identifier, PositionType } from './types';
+import { AreaType, FullEditorProps, Identifier, NodeType, PositionType, TreeItemType, addTreeItem, delTreeItem, updateTreeChildren } from './types';
 
 const wrapperStyle: CSSProperties = {
   width: '100%',
@@ -49,48 +49,37 @@ const wrapperStyle: CSSProperties = {
   zIndex: 0,
 };
 
-interface TreeItemType {
-  key: Identifier;
-  title: string;
-  isLeaf?: boolean;
-  children?: TreeItemType[];
+
+interface ToolPanelProps {
+  onSelect: (value?: { nodeType: NodeType; areaType: AreaType }) => void;
 }
 
-function updateTree(tree: TreeItemType[] | undefined, key: Identifier, children: TreeItemType[]): TreeItemType[] | undefined {
-  if (!tree) return tree;
-  return tree?.map(item => {
-    return {
-      ...item,
-      ...(item?.isLeaf ? {} : { children: updateTree(item?.children, key, children) })
-    }
-  });
-}
+function CreateTools({ onSelect }: ToolPanelProps) {
 
-function CreateTools() {
   return (
     <div>
       <div className='rc-tools-wrap'>
         <div>建筑：</div>
         <div className='rc-tools'>
-          <div className='rc-tools-one-item rc-tools-marker' />
+          <div className='rc-tools-one-item rc-tools-marker' onClick={() => onSelect({ nodeType: 'structure', areaType: 'point' })} />
           <div className='rc-tools-split-vertical' />
-          <div className='rc-tools-one-item rc-tools-polygon' />
+          <div className='rc-tools-one-item rc-tools-polygon' onClick={() => onSelect({ nodeType: 'structure', areaType: 'polygon' })} />
           <div className='rc-tools-split-vertical' />
-          <div className='rc-tools-one-item rc-tools-rectangle' />
+          <div className='rc-tools-one-item rc-tools-rectangle' onClick={() => onSelect({ nodeType: 'structure', areaType: 'rectangle' })} />
           <div className='rc-tools-split-vertical' />
-          <div className='rc-tools-one-item rc-tools-circle' />
+          <div className='rc-tools-one-item rc-tools-circle' onClick={() => onSelect({ nodeType: 'structure', areaType: 'circle' })} />
         </div>
       </div>
       <div className='rc-tools-wrap'>
         <div>点位：</div>
         <div className='rc-tools'>
-          <div className='rc-tools-one-item rc-tools-marker' />
+          <div className='rc-tools-one-item rc-tools-marker' onClick={() => onSelect({ nodeType: 'position', areaType: 'point' })} />
           <div className='rc-tools-split-vertical' />
-          <div className='rc-tools-one-item rc-tools-polygon' />
+          <div className='rc-tools-one-item rc-tools-polygon' onClick={() => onSelect({ nodeType: 'position', areaType: 'polygon' })} />
           <div className='rc-tools-split-vertical' />
-          <div className='rc-tools-one-item rc-tools-rectangle' />
+          <div className='rc-tools-one-item rc-tools-rectangle' onClick={() => onSelect({ nodeType: 'position', areaType: 'rectangle' })} />
           <div className='rc-tools-split-vertical' />
-          <div className='rc-tools-one-item rc-tools-circle' />
+          <div className='rc-tools-one-item rc-tools-circle' onClick={() => onSelect({ nodeType: 'position', areaType: 'circle' })} />
         </div>
       </div>
     </div>
@@ -100,101 +89,252 @@ function CreateTools() {
 interface PropertyPanelProps {
   value?: Partial<PositionType>;
   onChange?: (value: Partial<PositionType>) => void;
+  onChangeParent?: (_id: Identifier) => void;
   onSubmit?: (value: Partial<PositionType>) => void;
-  onRemove?: (value: Partial<PositionType>) => void;
+  onRemove?: (_id?: Identifier) => void;
 }
-function PropertyPanel({ value, onChange, onSubmit, onRemove }: PropertyPanelProps) {
+function PropertyPanel({ value, onChange, onChangeParent, onSubmit, onRemove }: PropertyPanelProps) {
   const handleChangeField = (fieldName: string) => {
-    return (fieldValue: any) => {
+    return (evt: any) => {
       if (onChange && value) {
-        const nValue: Partial<PositionType> = { ...value, [fieldName]: fieldValue }
+        const nValue: Partial<PositionType> = { ...value, [fieldName]: evt.target.value }
         onChange(nValue);
       }
     }
   }
+
   if (!value) return <div>未选中节点</div>
   return (
     <div>
       <div>
         <h3>基本信息</h3>
+        {(value._id && value.nodeType === 'structure') ? (
+          <div style={{ color: 'blue' }} onClick={() => onChangeParent?.(value._id)}>切换进入编辑该节点的子节点</div>
+        ) : null}
         <div>
-          名称:
+          <span>_id:</span>
+          <span>{value._id}</span>
+        </div>
+        <div>
+          <span>节点类型:</span>
+          <span>{value.nodeType}</span>
+        </div>
+        <div>
+          <span>名称:</span>
           <input value={value.name} onChange={handleChangeField('name')} />
         </div>
         <div>
-          父节点:
+          <span>父节点:</span>
           <span>{value.parent}</span>
         </div>
+        <div>
+          <span>上级节点: </span>
+          {value.ancestor?.map(item => (<p>{item}</p>))}
+        </div>
       </div>
+      <div>
+        <h3>位置与区域</h3>
+        <div>
+          <span>位置类型:</span>
+          <span>{value.locationType}</span>
+        </div>
+        <div>
+          <span>位置:</span>
+          <span>{value.location && value.location[0]}</span>
+          <span>X</span>
+          <span>{value.location && value.location[1]}</span>
+        </div>
+        <div>
+          <span>区域类型:</span>
+          <span>{value.areaType}</span>
+        </div>
+        <div>
+          <span>区域: </span>
+          <span>{JSON.stringify(value.area)}</span>
+        </div>
+      </div>
+      <div>
+        <h3>背景</h3>
+        <div>
+          <span>图片:</span>
+          <input value={value.bg?.image} type='file' onChange={handleChangeField('bg.image')} />
+        </div>
+        <div>
+          <div>四顶点位置:</div>
+          <div>
+            <span>{value.bg?.bounds?.[0]?.[0]}</span>
+            <span>X</span>
+            <span>{value.bg?.bounds?.[0]?.[1]}</span>
+          </div>
+          <div>
+            <span>{value.bg?.bounds?.[1]?.[0]}</span>
+            <span>X</span>
+            <span>{value.bg?.bounds?.[1]?.[1]}</span>
+          </div>
+          <div>
+            <span>{value.bg?.bounds?.[2]?.[0]}</span>
+            <span>X</span>
+            <span>{value.bg?.bounds?.[2]?.[1]}</span>
+          </div>
+          <div>
+            <span>{value.bg?.bounds?.[3]?.[0]}</span>
+            <span>X</span>
+            <span>{value.bg?.bounds?.[3]?.[1]}</span>
+          </div>
+        </div>
+      </div>
+
       <div style={{ display: 'flex', flexDirection: 'row' }}>
-        <button style={{ flex: 1 }} onClick={onSubmit}>保存</button>
-        <button style={{ width: 60 }} onClick={onRemove}>删除</button>
+        <button style={{ flex: 1 }} onClick={() => onSubmit?.(value)}>保存</button>
+        <button style={{ width: 60 }} onClick={() => onRemove?.(value?._id)}>删除</button>
       </div>
     </div>
   )
 }
 
+interface FullEditorState {
+  parent?: Identifier;
+  current?: Partial<PositionType>;
+  nodeMap: { [key: Identifier]: PositionType };
+  treeData: TreeItemType[];
+}
 export default function FullEditor(props: FullEditorProps) {
-  const { save, retrieve } = props;
-  const [parent, setParent] = React.useState<Identifier | undefined>(undefined);
-  const [current, setCurrent] = React.useState<Partial<PositionType> | undefined>(undefined);
-  const [nodeMap, setNodeMap] = React.useState<{ [key: Identifier]: any }>({});
-  const [treeData, setTreeData] = React.useState<TreeItemType[]>([]);
+  const { save, remove, retrieve } = props;
+  const [state, setState] = React.useState<FullEditorState>({
+    nodeMap: {},
+    treeData: [],
+  })
+  // const { current: treeDataWithEarth } = React.useRef<TreeItemType[]>([{
+  //   key: 'earth',
+  //   title: '地球',
+  //   expanded: true,
+  //   isLeaf: false,
+  // }]);
+  // React.useEffect(()=>{
+  //   treeDataWithEarth[0].children = state.treeData;
+  // },[state.treeData]);
 
   const handleSelect = React.useCallback((info: any) => {
-    console.log('selected', info);
+    console.log('selected 当前节点', info);
+    const key1 = info && info[0];
+    setState(state => {
+      const current = state.nodeMap[key1];
+      const parentId = current?.parent;
+      return { ...state, parent: parentId, current }
+    })
   }, []);
 
   const handleCheck = React.useCallback((checkedKeys: any) => {
     console.log('handleCheck', checkedKeys);
     const key1 = checkedKeys && checkedKeys[0];
-    const node = nodeMap[key1];
-    setCurrent(node);
-  }, [nodeMap]);
+    setState(state => {
+      const node = state.nodeMap[key1];
+      return { ...state, current: node }
+    })
+  }, []);
 
-  const handleLoadChildren = React.useCallback((treeNode: any) => {
-    console.log('load data...', treeNode);
-    return new Promise(resolve => {
-      setTimeout(() => {
-        retrieve(treeNode).then((result) => {
-          const nodeMap1 = result.reduce((prev: any, item: any) => {
-            return { ...prev, [item._id]: item };
-          }, {});
-          setNodeMap((state: any) => ({ ...state, ...nodeMap1 }));
-          const children = result.map((item: any) => {
-            return { key: item._id, title: item.name, isLeaf: item.nodeType === 'position' }
-          });
-          setTreeData(state => updateTree(state, treeNode.key, children) || []);
-          resolve(true);
-        });
-      }, 500);
+  const handleLoadChildren = React.useCallback(async (treeNode: any) => {
+    const qopts = (treeNode.key === 'earth') ? { where: { parent: null } } : { where: { parent: treeNode.key } };
+    const result = await retrieve(qopts);
+    console.log('load data...', treeNode, result);
+    setState(state => {
+      const nodeMap1 = result.items.reduce((prev: any, item: any) => {
+        return { ...prev, [item._id]: item };
+      }, {});
+      const children = result.items.map((item_1: any) => {
+        return { key: item_1._id, title: item_1.name, isLeaf: item_1.nodeType === 'position' };
+      });
+
+      const nTreeData = updateTreeChildren(state.treeData, treeNode.key, children) || []
+      // treeDataWithEarth[0].children = nTreeData;
+      return { ...state, nodeMap: { ...state.nodeMap, ...nodeMap1 }, treeData: nTreeData };
     });
   }, []);
 
   const handleChangeCurrent = React.useCallback((value: Partial<PositionType>) => {
-    setCurrent(state => ({ ...state, ...value }))
+    console.log('handleChangeCurrent', value);
+    setState(state => ({ ...state, current: value }))
+  }, []);
+  const handleChangeParent = React.useCallback((_id: Identifier) => {
+    console.log('handleChangeParent', _id);
+    setState(state => {
+      return { ...state, parent: _id, current: undefined }
+    });
   }, []);
   const handleSavePosition = React.useCallback((value: Partial<PositionType>) => {
-    save(value);
+    console.log('handleSavePosition', value);
+    save(value).then((record: PositionType) => {
+      setState(state => {
+        const nTreeData = addTreeItem(state.treeData, record.parent, { key: record._id, title: record.name, isLeaf: record.nodeType === 'position' }) || [];
+        // treeDataWithEarth[0].children = nTreeData;
+        return { ...state, current: record, nodeMap: { ...(state.nodeMap || {}), [record._id]: record }, treeData: nTreeData };
+      })
+    });
   }, []);
+  const handleRemovePosition = React.useCallback(async (_id?: Identifier) => {
+    console.log('handleRemovePosition', _id);
+    if (_id) {
+      await remove(_id);
+      setState(state => {
+        const nTreeData = delTreeItem(state.treeData, _id) || [];
+        return { ...state, current: undefined, treeData: nTreeData };
+      })
+    } else {
+      setState(state => {
+        return { ...state, current: undefined };
+      })
+    }
+  }, []);
+
+  const parent = state.parent;
+  const parentItem = parent ? state.nodeMap[parent] : undefined;
+  let currentAncestor = parentItem?.ancestor || [];
+  if (parent) currentAncestor = [...currentAncestor, parent];
+  const locationType = !parent ? 'gnss' : 'xyz'; // 顶层节点是gnss.
+
+  const handleSelectTool = React.useCallback((value?: { nodeType: NodeType; areaType: AreaType }) => {
+    if (value) {
+      setState(state => {
+        return {
+          ...state, current: {
+            name: value.nodeType === 'structure' ? '新建筑' : '新节点',
+            parent,
+            ancestor: currentAncestor,
+            nodeType: value.nodeType,
+            locationType,
+            areaType: value.areaType,
+          }
+        }
+      });
+    }
+  }, [currentAncestor, parent, locationType]);
+
+  const treeDataWithEarth2 = [{
+    key: 'earth',
+    title: '地球',
+    expanded: true,
+    isLeaf: false,
+    children: state.treeData,
+  }];
+  console.log('FullEditor', state, currentAncestor);
   return (
     <div style={{ ...wrapperStyle }}>
-      {!parent ? <LocationEditor /> : <FlowEditor />}
+      {!parent ? <LocationEditor dbNodeMap={state.nodeMap} dbNodeTree={state.treeData} parent={parentItem} value={state.current} onChange={handleChangeCurrent} /> : <FlowEditor />}
       <aside className='rc-aside-panel'>
         <div className='rc-panel-title'>添加节点</div>
-        <div><CreateTools /></div>
+        <div><CreateTools onSelect={handleSelectTool} /></div>
         <div className='rc-panel-title'>点位节点树</div>
         <Tree
           onSelect={handleSelect}
           checkable={false}
           onCheck={handleCheck}
-          checkedKeys={current?._id}
+          checkedKeys={state.current?._id}
           loadData={handleLoadChildren}
-          treeData={treeData}
+          treeData={treeDataWithEarth2}
         />
       </aside>
       <div className='rc-property-panel'>
-        <PropertyPanel value={current} onChange={handleChangeCurrent} onSubmit={handleSavePosition} />
+        <PropertyPanel value={state.current} onChange={handleChangeCurrent} onChangeParent={handleChangeParent} onSubmit={handleSavePosition} onRemove={handleRemovePosition} />
       </div>
     </div>
   )
