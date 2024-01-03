@@ -42,7 +42,7 @@ export const ReactDistortableImageOverlay = createLayerComponent<
     })
     return createElementObject(
       overlay,
-      extendContext(ctx, { overlayContainer: overlay }),
+      extendContext(ctx, { layerContainer: overlay, overlayContainer: overlay }),
     )
   },
   function updateImageOverlay(overlay, props, prevProps) {

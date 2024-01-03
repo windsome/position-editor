@@ -1,0 +1,13 @@
+diff --git a/node_modules/leaflet-distortableimage/dist/leaflet.distortableimage.js b/node_modules/leaflet-distortableimage/dist/leaflet.distortableimage.js
+index 90bf855..2f641b0 100644
+--- a/node_modules/leaflet-distortableimage/dist/leaflet.distortableimage.js
++++ b/node_modules/leaflet-distortableimage/dist/leaflet.distortableimage.js
+@@ -3134,7 +3134,7 @@ L.EditHandle = L.Marker.extend({
+       dragend: this._onHandleDragEnd
+     }, this);
+ 
+-    this._handled._map.off('zoomend', this.updateHandle, this);
++    this._handled._map?.off('zoomend', this.updateHandle, this);
+ 
+     this._handled.off('update', this.updateHandle, this);
+   },
