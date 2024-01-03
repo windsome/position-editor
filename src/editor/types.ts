@@ -13,9 +13,11 @@ export type NodeType = 'structure' | 'position';
 export type AreaType = 'polygon' | 'rectangle' | 'circle' | 'point';
 export type Locationype = 'gnss' | 'xyz';
 export interface BgType {
-  image: string; // 背景图片路径
-  style: any; // 背景样式
+  image?: string; // 背景图片路径
+  style?: any; // 背景样式
   bounds?: any[]; // 背景图片4个定点对应转换后的点.用来进行matrix3d变换.
+  corners?: any[];
+  [key: string]: any;
 }
 // type ToolType = AreaType | 'point';
 export interface PositionType {

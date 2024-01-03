@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "leaflet": "^1.9.4",
+    "leaflet-distortableimage": "^0.21.9",
     "lodash": "^4.17.21",
     "rc-tree": "^5.8.2",
     "react": "^18.2.0",

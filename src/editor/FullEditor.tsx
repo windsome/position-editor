@@ -102,6 +102,16 @@ function PropertyPanel({ value, onChange, onChangeParent, onSubmit, onRemove }: 
       }
     }
   }
+  const handleChangeBgField = (fieldName: string) => {
+    return (evt: any) => {
+      if (onChange && value) {
+        const bg = { ...(value.bg || {}), [fieldName]: evt.target.value};
+        const nValue: Partial<PositionType> = { ...value, bg }
+        onChange(nValue);
+      }
+    }
+  }
+
 
   if (!value) return <div>未选中节点</div>
   return (
@@ -121,7 +131,7 @@ function PropertyPanel({ value, onChange, onChangeParent, onSubmit, onRemove }: 
         </div>
         <div>
           <span>名称:</span>
-          <input value={value.name} onChange={handleChangeField('name')} />
+          <input value={value.name || ''} onChange={handleChangeField('name')} />
         </div>
         <div>
           <span>父节点:</span>
@@ -156,30 +166,30 @@ function PropertyPanel({ value, onChange, onChangeParent, onSubmit, onRemove }: 
       <div>
         <h3>背景</h3>
         <div>
-          <span>图片:</span>
-          <input value={value.bg?.image} type='file' onChange={handleChangeField('bg.image')} />
+          <span  onClick={() => handleChangeBgField('image')({target: {value: '/images/example.jpg'}})}>图片:</span>
+          <input value={value.bg?.image || ''} type='input' />
         </div>
         <div>
           <div>四顶点位置:</div>
           <div>
-            <span>{value.bg?.bounds?.[0]?.[0]}</span>
+            <span>{value.bg?.corners?.[0]?.[0]}</span>
             <span>X</span>
-            <span>{value.bg?.bounds?.[0]?.[1]}</span>
+            <span>{value.bg?.corners?.[0]?.[1]}</span>
           </div>
           <div>
-            <span>{value.bg?.bounds?.[1]?.[0]}</span>
+            <span>{value.bg?.corners?.[1]?.[0]}</span>
             <span>X</span>
-            <span>{value.bg?.bounds?.[1]?.[1]}</span>
+            <span>{value.bg?.corners?.[1]?.[1]}</span>
           </div>
           <div>
-            <span>{value.bg?.bounds?.[2]?.[0]}</span>
+            <span>{value.bg?.corners?.[2]?.[0]}</span>
             <span>X</span>
-            <span>{value.bg?.bounds?.[2]?.[1]}</span>
+            <span>{value.bg?.corners?.[2]?.[1]}</span>
           </div>
           <div>
-            <span>{value.bg?.bounds?.[3]?.[0]}</span>
+            <span>{value.bg?.corners?.[3]?.[0]}</span>
             <span>X</span>
-            <span>{value.bg?.bounds?.[3]?.[1]}</span>
+            <span>{value.bg?.corners?.[3]?.[1]}</span>
           </div>
         </div>
       </div>

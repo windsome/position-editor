@@ -34,10 +34,11 @@ import {
 import * as React from "react";
 import L from "leaflet";
 import newMarker from "./pin.png";
-import isEmpty from 'lodash/isEmpty';
 import "leaflet/dist/leaflet.css";
 import "./location.editor.css";
 import { InnerEditorProps, PositionType, findChildrenIdsByParentId } from "./types";
+import { ReactDistortableImageOverlay } from "./ReactDistortableImageOverlay";
+
 // import tileLayer from "../util/tileLayer";
 
 const center: L.LatLngExpression = [50.0595, 19.9379];
@@ -58,32 +59,62 @@ const fillBlueOptions = { fillColor: 'blue' }
 
 interface OnePositionProps {
   value: Partial<PositionType>;
+  onChange?: (value: Partial<PositionType>) => void;
+  editing?: boolean;
 }
-const OnePosition = ({ value }: OnePositionProps) => {
+const OnePosition = ({ value, onChange, editing = false }: OnePositionProps) => {
   // 展示一个节点.
   const areaType = value.areaType;
+  const bgEventHandlers = {
+    load() {
+      console.log('load');
+    },
+    edit(evt: any) {
+      console.log('edit', evt.target._corners);
+      const corners = evt.target._corners;
+      const nCorners = corners?.map((item: L.LatLng) => [item.lat, item.lng]);
+      const bg = { ...(value.bg || {}), corners: nCorners };
+      onChange?.({ ...(value || {}), bg });
+    },
+    dragend(evt: any) {
+      console.log('dragend', evt.target._corners);
+      const corners = evt.target._corners;
+      const nCorners = corners?.map((item: L.LatLng) => [item.lat, item.lng]);
+      const bg = { ...(value.bg || {}), corners: nCorners };
+      onChange?.({ ...(value || {}), bg });
+    }
+  }
+
+  const corners = value.bg?.corners;
+  const corners1 = corners?.map((item: number[]) => L.latLng(item[0], item[1]));
 
   if (areaType === 'point') {
     return (
-      <Marker
-        key={value._id}
-        position={value.location}
-        draggable={true}
-        eventHandlers={{
-          moveend(e) {
-            const { lat, lng } = e.target.getLatLng();
-            console.log('moveend', lat, lng);
-            // setCurrentCampus(old => {
-            //   // 一个时刻只有一个处于编辑状态. 后续的点击不添加新园区.
-            //   return { ...old, pos: [lat, lng] }
-            // })
-          }
-        }}
-      >
-        <Popup keepInView={true}>
-          <button >{value.name}</button>
-        </Popup>
-      </Marker>
+      <>
+        {value.bg?.image ?
+          editing ? <ReactDistortableImageOverlay url={value.bg?.image} eventHandlers={bgEventHandlers} editing={editing} selected={editing} corners={corners1} />
+            : <ReactDistortableImageOverlay url={value.bg?.image} eventHandlers={bgEventHandlers} editing={false} selected={false} corners={corners1} /> : null}
+
+        <Marker
+          key={value._id}
+          position={value.location}
+          draggable={true}
+          eventHandlers={{
+            moveend(e) {
+              const { lat, lng } = e.target.getLatLng();
+              console.log('moveend', lat, lng);
+              // setCurrentCampus(old => {
+              //   // 一个时刻只有一个处于编辑状态. 后续的点击不添加新园区.
+              //   return { ...old, pos: [lat, lng] }
+              // })
+            }
+          }}
+        >
+          <Popup keepInView={true}>
+            <button >{value.name}</button>
+          </Popup>
+        </Marker>
+      </>
     )
   } else if (areaType === 'circle') {
     return (
@@ -317,7 +348,22 @@ const MapInner = ({ maxLevel = 1, dbNodeMap = {}, dbNodeTree = [], parent, value
           <OnePosition key={item._id} value={item} />
         )
       })}
-      {state.current?.location ? <OnePosition value={state.current} /> : null}
+      {state.current?.location ? <OnePosition value={state.current} onChange={onChange} /> : null}
+      {/* <ReactDistortableImageOverlay 
+					url="/images/example.jpg"
+					mode='rotate'
+          eventHandlers={eventHandlers}
+          selected={true}
+          editing={true}
+					// onCornersUpdated={this.onCornersUpdated.bind(this)}
+					// onWellKnownTextUpdated={this.onWellKnownTextUpdated.bind(this)}
+					// corners={[
+					// 	new L.latLng(43.78710550492949,15.647438805314396),
+					// 	new L.latLng(43.78710550492949,15.655914504316957),
+					// 	new L.latLng(43.78098644922989,15.647438805314396),
+					// 	new L.latLng(43.78098644922989,15.655914504316957)
+					// ]}
+				/> */}
     </>
   );
 }
