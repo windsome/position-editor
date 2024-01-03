@@ -85,6 +85,18 @@ const OnePosition = ({ value, onChange, editing = false }: OnePositionProps) => 
     }
   }
 
+  const markerEventHandlers = {
+    moveend(e:any) {
+      const { lat, lng } = e.target.getLatLng();
+      console.log('moveend', lat, lng);
+      onChange?.({ ...(value || {}), location: [lat,lng] });
+      // setCurrentCampus(old => {
+      //   // 一个时刻只有一个处于编辑状态. 后续的点击不添加新园区.
+      //   return { ...old, pos: [lat, lng] }
+      // })
+    }
+  }
+
   const corners = value.bg?.corners;
   const corners1 = corners?.map((item: number[]) => L.latLng(item[0], item[1]));
 
@@ -99,32 +111,33 @@ const OnePosition = ({ value, onChange, editing = false }: OnePositionProps) => 
           key={value._id}
           position={value.location}
           draggable={true}
-          eventHandlers={{
-            moveend(e) {
-              const { lat, lng } = e.target.getLatLng();
-              console.log('moveend', lat, lng);
-              // setCurrentCampus(old => {
-              //   // 一个时刻只有一个处于编辑状态. 后续的点击不添加新园区.
-              //   return { ...old, pos: [lat, lng] }
-              // })
-            }
-          }}
+          eventHandlers={markerEventHandlers}
         >
           <Popup keepInView={true}>
-            <button >{value.name}</button>
+            <span >{value.name}</span>
           </Popup>
         </Marker>
       </>
     )
   } else if (areaType === 'circle') {
     return (
-      <Circle center={value.location} pathOptions={fillBlueOptions} radius={value.area || 0} />
+      <>
+        {value.bg?.image ?
+          editing ? <ReactDistortableImageOverlay url={value.bg?.image} eventHandlers={bgEventHandlers} editing={editing} selected={editing} corners={corners1} />
+            : <ReactDistortableImageOverlay url={value.bg?.image} eventHandlers={bgEventHandlers} editing={false} selected={false} corners={corners1} /> : null}
+        <Circle center={value.location} pathOptions={fillBlueOptions} radius={value.area || 0} />
+      </>
     )
   } else if (areaType === 'rectangle') {
     if (value.location && value.area) {
       const rect = [value.location, value.area];
       return (
-        <Rectangle bounds={rect} pathOptions={fillBlueOptions} />
+        <>
+          {value.bg?.image ?
+            editing ? <ReactDistortableImageOverlay url={value.bg?.image} eventHandlers={bgEventHandlers} editing={editing} selected={editing} corners={corners1} />
+              : <ReactDistortableImageOverlay url={value.bg?.image} eventHandlers={bgEventHandlers} editing={false} selected={false} corners={corners1} /> : null}
+          <Rectangle bounds={rect} pathOptions={fillBlueOptions} />
+        </>
       )
     } else {
       return null;
@@ -135,7 +148,12 @@ const OnePosition = ({ value, onChange, editing = false }: OnePositionProps) => 
       let polygon = [value.location, ...(value.area || [])];
       if (value.polygonTmp) polygon.push(value.polygonTmp)
       return (
-        <Polygon pathOptions={fillBlueOptions} positions={polygon} />
+        <>
+          {value.bg?.image ?
+            editing ? <ReactDistortableImageOverlay url={value.bg?.image} eventHandlers={bgEventHandlers} editing={editing} selected={editing} corners={corners1} />
+              : <ReactDistortableImageOverlay url={value.bg?.image} eventHandlers={bgEventHandlers} editing={false} selected={false} corners={corners1} /> : null}
+          <Polygon pathOptions={fillBlueOptions} positions={polygon} />
+        </>
       )
     } else {
       return null;
