@@ -11,7 +11,7 @@ import L from "leaflet";
 import newMarker from "./pin.png";
 import isEmpty from 'lodash/isEmpty';
 import "leaflet/dist/leaflet.css";
-import "./location.editor.css";
+import "../map/location.editor.css";
 // import tileLayer from "../util/tileLayer";
 
 const center: L.LatLngExpression = [50.0595, 19.9379];

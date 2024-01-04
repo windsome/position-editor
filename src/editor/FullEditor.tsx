@@ -32,8 +32,8 @@
  *   - 树状结构treeData:[{key(节点_id),title(节点名称name),isLeaf(是否为叶子节点position类型),children:[]},...]
  */
 import * as React from 'react';
-import LocationEditor from './LocationEditor';
-import FlowEditor from './FlowEditor';
+import LocationEditor from './map/LocationEditor';
+import FlowEditor from './flow/FlowEditor';
 import { CSSProperties } from 'react';
 
 import Tree from 'rc-tree';

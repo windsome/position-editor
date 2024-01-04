@@ -1,0 +1,10 @@
+.react-flow__BgNode {
+  border: 1px dashed #666;
+  background: transparent;
+}
+
+.text-updater-node label {
+  display: block;
+  color: #777;
+  font-size: 12px;
+}

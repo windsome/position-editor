@@ -22,126 +22,15 @@
 import {
   MapContainer,
   TileLayer,
-  Marker,
-  Popup,
   useMapEvents,
-  Circle,
-  Rectangle,
-  Polygon,
 } from "react-leaflet";
 import * as React from "react";
-import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import "./location.editor.css";
-import { InnerEditorProps, PositionType, findChildrenIdsByParentId } from "./types";
-import { ReactDistortableImageOverlay } from "./ReactDistortableImageOverlay";
+import { InnerEditorProps, PositionType, findChildrenIdsByParentId } from "../types";
 import { center, tileLayer_TianDiTu_Satellite_Annotion as tileLayerAnnotion, tileLayer_TianDiTu_Satellite_Map as tileLayerMap } from './mapConst';
+import OnePosition from "./OnePosition";
 
-const fillBlueOptions = { fillColor: 'blue' }
-
-interface OnePositionProps {
-  value: Partial<PositionType>;
-  onChange?: (value: Partial<PositionType>) => void;
-  editing?: boolean;
-}
-const OnePosition = ({ value, onChange, editing = false }: OnePositionProps) => {
-  // 展示一个节点.
-  const areaType = value.areaType;
-  const bgEventHandlers = {
-    load() {
-      console.log('load');
-    },
-    edit(evt: any) {
-      console.log('edit', evt.target._corners);
-      const corners = evt.target._corners;
-      const nCorners = corners?.map((item: L.LatLng) => [item.lat, item.lng]);
-      const bg = { ...(value.bg || {}), corners: nCorners };
-      onChange?.({ ...(value || {}), bg });
-    },
-    dragend(evt: any) {
-      console.log('dragend', evt.target._corners);
-      const corners = evt.target._corners;
-      const nCorners = corners?.map((item: L.LatLng) => [item.lat, item.lng]);
-      const bg = { ...(value.bg || {}), corners: nCorners };
-      onChange?.({ ...(value || {}), bg });
-    }
-  }
-
-  const markerEventHandlers = {
-    moveend(e: any) {
-      const { lat, lng } = e.target.getLatLng();
-      console.log('moveend', lat, lng);
-      onChange?.({ ...(value || {}), location: [lat, lng] });
-      // setCurrentCampus(old => {
-      //   // 一个时刻只有一个处于编辑状态. 后续的点击不添加新园区.
-      //   return { ...old, pos: [lat, lng] }
-      // })
-    }
-  }
-
-  const corners = value.bg?.corners;
-  const corners1 = corners?.map((item: number[]) => L.latLng(item[0], item[1]));
-
-  if (areaType === 'point') {
-    return (
-      <>
-        {value.bg?.image ?
-          editing ? <ReactDistortableImageOverlay url={value.bg?.image} eventHandlers={bgEventHandlers} editing={editing} selected={editing} corners={corners1} />
-            : <ReactDistortableImageOverlay url={value.bg?.image} eventHandlers={bgEventHandlers} editing={false} selected={false} corners={corners1} /> : null}
-
-        <Marker
-          key={value._id}
-          position={value.location}
-          draggable={true}
-          eventHandlers={markerEventHandlers}
-        >
-          <Popup keepInView={true}>
-            <span >{value.name}</span>
-          </Popup>
-        </Marker>
-      </>
-    )
-  } else if (areaType === 'circle') {
-    return (
-      <>
-        {value.bg?.image ?
-          editing ? <ReactDistortableImageOverlay url={value.bg?.image} eventHandlers={bgEventHandlers} editing={editing} selected={editing} corners={corners1} />
-            : <ReactDistortableImageOverlay url={value.bg?.image} eventHandlers={bgEventHandlers} editing={false} selected={false} corners={corners1} /> : null}
-        <Circle center={value.location} pathOptions={fillBlueOptions} radius={value.area || 0} />
-      </>
-    )
-  } else if (areaType === 'rectangle') {
-    if (value.location && value.area) {
-      const rect = [value.location, value.area];
-      return (
-        <>
-          {value.bg?.image ?
-            editing ? <ReactDistortableImageOverlay url={value.bg?.image} eventHandlers={bgEventHandlers} editing={editing} selected={editing} corners={corners1} />
-              : <ReactDistortableImageOverlay url={value.bg?.image} eventHandlers={bgEventHandlers} editing={false} selected={false} corners={corners1} /> : null}
-          <Rectangle bounds={rect} pathOptions={fillBlueOptions} />
-        </>
-      )
-    } else {
-      return null;
-    }
-  } else if (areaType === 'polygon') {
-    if (value.location) {
-      // area为点列表,不包含第一个点,第一个点为location.
-      let polygon = [value.location, ...(value.area || [])];
-      if (value.polygonTmp) polygon.push(value.polygonTmp)
-      return (
-        <>
-          {value.bg?.image ?
-            editing ? <ReactDistortableImageOverlay url={value.bg?.image} eventHandlers={bgEventHandlers} editing={editing} selected={editing} corners={corners1} />
-              : <ReactDistortableImageOverlay url={value.bg?.image} eventHandlers={bgEventHandlers} editing={false} selected={false} corners={corners1} /> : null}
-          <Polygon pathOptions={fillBlueOptions} positions={polygon} />
-        </>
-      )
-    } else {
-      return null;
-    }
-  }
-}
 
 interface MapInnerState {
   mapDraggable: boolean; // 进入编辑或创建模式前,保存地图是否可以移动的状态.
