@@ -22,9 +22,7 @@
 import {
   MapContainer,
   TileLayer,
-  ImageOverlay,
   Marker,
-  useMap,
   Popup,
   useMapEvents,
   Circle,
@@ -33,27 +31,11 @@ import {
 } from "react-leaflet";
 import * as React from "react";
 import L from "leaflet";
-import newMarker from "./pin.png";
 import "leaflet/dist/leaflet.css";
 import "./location.editor.css";
 import { InnerEditorProps, PositionType, findChildrenIdsByParentId } from "./types";
 import { ReactDistortableImageOverlay } from "./ReactDistortableImageOverlay";
-
-// import tileLayer from "../util/tileLayer";
-
-const center: L.LatLngExpression = [50.0595, 19.9379];
-const tileLayer = {
-  attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors',
-  url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'
-}
-
-const pointerIcon = new L.Icon({
-  iconUrl: newMarker,
-  iconSize: [50, 58], // size of the icon
-  iconAnchor: [20, 58], // changed marker icon position
-  popupAnchor: [0, -60], // changed popup position
-});
-
+import { center, tileLayer_TianDiTu_Satellite_Annotion as tileLayerAnnotion, tileLayer_TianDiTu_Satellite_Map as tileLayerMap } from './mapConst';
 
 const fillBlueOptions = { fillColor: 'blue' }
 
@@ -86,10 +68,10 @@ const OnePosition = ({ value, onChange, editing = false }: OnePositionProps) => 
   }
 
   const markerEventHandlers = {
-    moveend(e:any) {
+    moveend(e: any) {
       const { lat, lng } = e.target.getLatLng();
       console.log('moveend', lat, lng);
-      onChange?.({ ...(value || {}), location: [lat,lng] });
+      onChange?.({ ...(value || {}), location: [lat, lng] });
       // setCurrentCampus(old => {
       //   // 一个时刻只有一个处于编辑状态. 后续的点击不添加新园区.
       //   return { ...old, pos: [lat, lng] }
@@ -166,7 +148,7 @@ interface MapInnerState {
   editing: boolean; // 是否在编辑状态.
   current?: Partial<PositionType>;
 }
-const MapInner = ({ maxLevel = 1, dbNodeMap = {}, dbNodeTree = [], parent, value, onChange }: InnerEditorProps) => {
+const MapInner = ({ dbNodeMap = {}, dbNodeTree = [], parent, value, onChange }: InnerEditorProps) => {
   // 如何判断当前模式,是创建,编辑还是查看模式?
   // + 当前无选中节点,表示为查看模式.
   // + 当前选中节点无_id,表示创建节点中.
@@ -360,40 +342,24 @@ const MapInner = ({ maxLevel = 1, dbNodeMap = {}, dbNodeTree = [], parent, value
   console.log('MapInner render', { editing: state.editing, mode, count: staticNodes.length }, value);
   return (
     <>
-      <TileLayer {...tileLayer} />
       {staticNodes.map(item => {
         return (
           <OnePosition key={item._id} value={item} />
         )
       })}
       {state.current?.location ? <OnePosition value={state.current} onChange={onChange} /> : null}
-      {/* <ReactDistortableImageOverlay 
-					url="/images/example.jpg"
-					mode='rotate'
-          eventHandlers={eventHandlers}
-          selected={true}
-          editing={true}
-					// onCornersUpdated={this.onCornersUpdated.bind(this)}
-					// onWellKnownTextUpdated={this.onWellKnownTextUpdated.bind(this)}
-					// corners={[
-					// 	new L.latLng(43.78710550492949,15.647438805314396),
-					// 	new L.latLng(43.78710550492949,15.655914504316957),
-					// 	new L.latLng(43.78098644922989,15.647438805314396),
-					// 	new L.latLng(43.78098644922989,15.655914504316957)
-					// ]}
-				/> */}
     </>
   );
 }
 
 const LocationEditor = (props: InnerEditorProps) => {
   // 目前只处理maxLevel=1的情形.
-  const [map, setMap] = React.useState<any>(null);
+  // const [map, setMap] = React.useState<any>(null);
 
   return (
     <div className="leaflet-wrapper">
       <MapContainer
-        ref={setMap}
+        // ref={setMap}
         // @ts-ignore
         // whenCreated={setMap}
         // whenReady={setMap}
@@ -401,6 +367,8 @@ const LocationEditor = (props: InnerEditorProps) => {
         zoom={15}
         scrollWheelZoom={true}
       >
+        <TileLayer {...tileLayerMap} />
+        <TileLayer {...tileLayerAnnotion} />
         <MapInner {...props} />
       </MapContainer>
     </div>

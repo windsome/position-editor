@@ -23,7 +23,7 @@ export interface ReactDistortableImageOverlayProps extends MediaOverlayProps {
   actions?: any[];
 }
 export const ReactDistortableImageOverlay = createLayerComponent<
-// @ts-ignore
+  // @ts-ignore
   L.DistortableImageOverlay,
   ReactDistortableImageOverlayProps
 >(

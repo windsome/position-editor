@@ -49,6 +49,11 @@ xyflow编辑器:
   - 节点map(nodeMap)
   - 树状结构treeData:[{key(节点_id),title(节点名称name),isLeaf(是否为叶子节点position类型),children:[]},...]
 
+## leaflet使用天地图
+申请天地图key<http://lbs.tianditu.gov.cn/server/MapService.html>
+
+可以参考<https://github.com/htoooth/Leaflet.ChineseTmsProviders/blob/master/src/leaflet.ChineseTmsProviders.js>得到天地图的配置.
+
 ## 测试
 
 ```sh
