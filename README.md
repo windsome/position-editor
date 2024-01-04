@@ -55,3 +55,6 @@ xyflow编辑器:
 yarn
 yarn dev
 ```
+## 问题
+1. leaflet-distortableimage卸载时报错,`Uncaught TypeError: Cannot read properties of null (reading 'off')`
+见<https://github.com/publiclab/Leaflet.DistortableImage/issues/1391>,修改EditHandle.

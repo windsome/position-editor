@@ -166,7 +166,7 @@ function PropertyPanel({ value, onChange, onChangeParent, onSubmit, onRemove }: 
       <div>
         <h3>背景</h3>
         <div>
-          <span  onClick={() => handleChangeBgField('image')({target: {value: '/images/example.jpg'}})}>图片:</span>
+          <span style={{color:'blue'}} onClick={() => handleChangeBgField('image')({target: {value: '/images/example.jpg'}})}>图片:</span>
           <input value={value.bg?.image || ''} type='input' />
         </div>
         <div>
