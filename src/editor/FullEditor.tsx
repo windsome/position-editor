@@ -39,7 +39,8 @@ import { CSSProperties } from 'react';
 import Tree from 'rc-tree';
 import "rc-tree/assets/index.css"
 import './tools.css';
-import { AreaType, FullEditorProps, Identifier, NodeType, PositionType, TreeItemType, addTreeItem, delTreeItem, updateTreeChildren } from './types';
+import { AreaType, FullEditorProps, Identifier, NodeType, PositionType, TreeItemType } from './types';
+import { addTreeItem, delTreeItem, updateTreeChildren } from './tree';
 
 const wrapperStyle: CSSProperties = {
   width: '100%',
@@ -139,7 +140,7 @@ function PropertyPanel({ value, onChange, onChangeParent, onSubmit, onRemove }: 
         </div>
         <div>
           <span>上级节点: </span>
-          {value.ancestor?.map(item => (<p>{item}</p>))}
+          {value.ancestor?.map(item => (<p key={item}>{item}</p>))}
         </div>
       </div>
       <div>
@@ -329,7 +330,8 @@ export default function FullEditor(props: FullEditorProps) {
   console.log('FullEditor', state, currentAncestor);
   return (
     <div style={{ ...wrapperStyle }}>
-      {!parent ? <LocationEditor dbNodeMap={state.nodeMap} dbNodeTree={state.treeData} parent={parentItem} value={state.current} onChange={handleChangeCurrent} /> : <FlowEditor />}
+      {/* <FlowEditor /> */}
+      {!parent ? <LocationEditor dbNodeMap={state.nodeMap} dbNodeTree={state.treeData} parent={parentItem} value={state.current} onChange={handleChangeCurrent} /> : <FlowEditor dbNodeMap={state.nodeMap} dbNodeTree={state.treeData} parent={parentItem} value={state.current} onChange={handleChangeCurrent} />}
       <aside className='rc-aside-panel'>
         <div className='rc-panel-title'>添加节点</div>
         <div><CreateTools onSelect={handleSelectTool} /></div>

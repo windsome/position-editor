@@ -1,5 +1,7 @@
-.react-flow__BgNode {
+.react-flow__node-NodeBg {
+  z-index: -1 !important;
   border: 1px dashed #666;
+  transform: unset !important;
   background: transparent;
 }
 

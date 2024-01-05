@@ -27,7 +27,8 @@ import {
 import * as React from "react";
 import "leaflet/dist/leaflet.css";
 import "./location.editor.css";
-import { InnerEditorProps, PositionType, findChildrenIdsByParentId } from "../types";
+import { InnerEditorProps, PositionType } from "../types";
+import { findChildrenIdsByParentId } from "../tree";
 import { center, tileLayer_TianDiTu_Satellite_Annotion as tileLayerAnnotion, tileLayer_TianDiTu_Satellite_Map as tileLayerMap } from './mapConst';
 import OnePosition from "./OnePosition";
 
