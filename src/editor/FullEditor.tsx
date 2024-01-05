@@ -112,91 +112,103 @@ function PropertyPanel({ value, onChange, onChangeParent, onSubmit, onRemove }: 
     }
   }
 
-
-  if (!value) return <div>未选中节点</div>
+  if (!value) return <div style={{background: 'rgba(255,255,255,0.90)', padding: '10px 20px', borderRadius: '10px', boxShadow: '0px 4px 4px 0px rgba(0,0,0,0.25)'}}>未选中节点</div>
   return (
-    <div>
-      <div>
-        <h3>基本信息</h3>
-        {(value._id && value.nodeType === 'structure') ? (
-          <div style={{ color: 'blue' }} onClick={() => onChangeParent?.(value._id)}>切换进入编辑该节点的子节点</div>
-        ) : null}
+    <div style={{ padding: '0px 0px 70px 20px' }}>
+      <div style={{ maxHeight: '600px', paddingRight: '20px', overflowY: 'scroll' }}>
         <div>
-          <span>_id:</span>
-          <span>{value._id}</span>
-        </div>
-        <div>
-          <span>节点类型:</span>
-          <span>{value.nodeType}</span>
-        </div>
-        <div>
-          <span>名称:</span>
-          <input value={value.name || ''} onChange={handleChangeField('name')} />
-        </div>
-        <div>
-          <span>父节点:</span>
-          <span>{value.parent}</span>
-        </div>
-        <div>
-          <span>上级节点: </span>
-          {value.ancestor?.map(item => (<p>{item}</p>))}
-        </div>
-      </div>
-      <div>
-        <h3>位置与区域</h3>
-        <div>
-          <span>位置类型:</span>
-          <span>{value.locationType}</span>
-        </div>
-        <div>
-          <span>位置:</span>
-          <span>{value.location && value.location[0]}</span>
-          <span>X</span>
-          <span>{value.location && value.location[1]}</span>
-        </div>
-        <div>
-          <span>区域类型:</span>
-          <span>{value.areaType}</span>
-        </div>
-        <div>
-          <span>区域: </span>
-          <span>{JSON.stringify(value.area)}</span>
-        </div>
-      </div>
-      <div>
-        <h3>背景</h3>
-        <div>
-          <span style={{ color: 'blue' }} onClick={() => handleChangeBgField('image')({ target: { value: '/images/example.jpg' } })}>图片:</span>
-          <input value={value.bg?.image || ''} type='input' />
-        </div>
-        <div>
-          <div>四顶点位置:</div>
-          <div>
-            <span>{value.bg?.corners?.[0]?.[0]}</span>
-            <span>X</span>
-            <span>{value.bg?.corners?.[0]?.[1]}</span>
+          <h3>基本信息</h3>
+          {(value._id && value.nodeType === 'structure') ? (
+            <div style={{ color: 'blue' }} onClick={() => onChangeParent?.(value._id)}>切换进入编辑该节点的子节点</div>
+          ) : null}
+          <div className="rc-property-item">
+            <span className="rc-property-item-label">_id:</span>
+            <span>{value._id}</span>
           </div>
-          <div>
-            <span>{value.bg?.corners?.[1]?.[0]}</span>
-            <span>X</span>
-            <span>{value.bg?.corners?.[1]?.[1]}</span>
+          <div className="rc-property-item">
+            <span className="rc-property-item-label">节点类型:</span>
+            <span>{value.nodeType}</span>
           </div>
-          <div>
-            <span>{value.bg?.corners?.[2]?.[0]}</span>
-            <span>X</span>
-            <span>{value.bg?.corners?.[2]?.[1]}</span>
+          <div className="rc-property-item">
+            <span className="rc-property-item-label">名称:</span>
+            <input value={value.name || ''} onChange={handleChangeField('name')} />
           </div>
-          <div>
-            <span>{value.bg?.corners?.[3]?.[0]}</span>
-            <span>X</span>
-            <span>{value.bg?.corners?.[3]?.[1]}</span>
+          <div className="rc-property-item">
+            <span className="rc-property-item-label">父节点:</span>
+            <span>{value.parent}</span>
+          </div>
+          <div className="rc-property-item">
+            <span className="rc-property-item-label">上级节点: </span>
+            {value.ancestor?.map(item => (<p>{item}</p>))}
           </div>
         </div>
-      </div>
-
-      <div style={{ display: 'flex', flexDirection: 'row' }}>
-        <button style={{ flex: 1 }} onClick={() => onSubmit?.(value)}>保存</button>
-        <button style={{ width: 60 }} onClick={() => onRemove?.(value?._id)}>删除</button>
+        <div style={{ marginTop: '30px' }}>
+          <h3>位置与区域</h3>
+          <div className="rc-property-item">
+            <span className="rc-property-item-label">位置类型:</span>
+            <span>{value.locationType}</span>
+          </div>
+          <div className="rc-property-item">
+            <span className="rc-property-item-label">位置:</span>
+            <span>{value.location && value.location[0]}</span>
+            <span>X</span>
+            <span>{value.location && value.location[1]}</span>
+          </div>
+          <div className="rc-property-item">
+            <span className="rc-property-item-label">区域类型:</span>
+            <span>{value.areaType}</span>
+          </div>
+          <div className="rc-property-item">
+            <span className="rc-property-item-label">区域: </span>
+            {value?.area?.length > 0 ? <div>
+              {value?.area?.map((item: any, index: number) => {
+                return <div key={index}>
+                  {/* 区分矩形和多边形 */}
+                  <span>{item?.length > 0 ? item[0] : item}</span>
+                  <span>X</span>
+                  <span>{item?.length > 0 ? item[1] : item}</span>
+                </div>
+              })}
+            </div> : <span>{JSON.stringify(value.area)}</span>}
+          </div>
+        </div>
+        <div style={{ marginTop: '30px' }}>
+          <h3>背景</h3>
+          <div className="rc-property-item">
+            <span className="rc-property-item-label" style={{ color: 'blue' }} onClick={() => handleChangeBgField('image')({ target: { value: '/images/example.jpg' } })}>图片:</span>
+            <input value={value.bg?.image || ''} type='input' />
+          </div>
+          <div className="rc-property-item">
+            <div className="rc-property-item-label">四顶点位置:</div>
+            <div>
+              <div>
+                <span>{value.bg?.corners?.[0]?.[0]}</span>
+                <span>X</span>
+                <span>{value.bg?.corners?.[0]?.[1]}</span>
+              </div>
+              <div>
+                <span>{value.bg?.corners?.[1]?.[0]}</span>
+                <span>X</span>
+                <span>{value.bg?.corners?.[1]?.[1]}</span>
+              </div>
+              <div>
+                <span>{value.bg?.corners?.[2]?.[0]}</span>
+                <span>X</span>
+                <span>{value.bg?.corners?.[2]?.[1]}</span>
+              </div>
+              <div>
+                <span>{value.bg?.corners?.[3]?.[0]}</span>
+                <span>X</span>
+                <span>{value.bg?.corners?.[3]?.[1]}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div style={{ position: 'absolute', bottom: '16px', width: '90%', display: 'flex' }}>
+          {/* <div style={{ marginTop: '30px', display: 'flex', flexDirection: 'row', paddingBottom: '16px' }}> */}
+          <button style={{ cursor: 'pointer', height: '32px', border: '1px solid #3d5afe', borderRadius: '4px', color: '#3D5AFE', flex: 2, marginRight: '20px' }} onClick={() => onSubmit?.(value)}>保存</button>
+          <button style={{ cursor: 'pointer', height: '32px', border: '1px solid red', borderRadius: '4px', color: 'red', flex: 1 }} onClick={() => onRemove?.(value?._id)}>删除</button>
+        </div>
       </div>
     </div>
   )
@@ -331,17 +343,23 @@ export default function FullEditor(props: FullEditorProps) {
     <div style={{ ...wrapperStyle }}>
       {!parent ? <LocationEditor dbNodeMap={state.nodeMap} dbNodeTree={state.treeData} parent={parentItem} value={state.current} onChange={handleChangeCurrent} /> : <FlowEditor />}
       <aside className='rc-aside-panel'>
-        <div className='rc-panel-title'>添加节点</div>
-        <div><CreateTools onSelect={handleSelectTool} /></div>
-        <div className='rc-panel-title'>点位节点树</div>
-        <Tree
-          onSelect={handleSelect}
-          checkable={false}
-          onCheck={handleCheck}
-          checkedKeys={state.current?._id}
-          loadData={handleLoadChildren}
-          treeData={treeDataWithEarth2}
-        />
+        <div style={{ background: 'rgba(255,255,255,0.90)', borderRight: '1px solid #eee', padding: '16px 20px', borderRadius: '10px', boxShadow: '0px 4px 4px 0px rgba(0,0,0,0.25)' }}>
+          <div className='rc-panel-title'>添加节点</div>
+          <div><CreateTools onSelect={handleSelectTool} /></div>
+        </div>
+        <div style={{ background: 'rgba(255,255,255,0.90)', marginTop: '20px', borderRadius: '10px', boxShadow: '0px 4px 4px 0px rgba(0,0,0,0.25)', maxHeight: '500px', overflowY: 'hidden' }}>
+          <div style={{ padding: '16px 20px', overflowY: 'scroll' }}>
+            <div className='rc-panel-title'>点位节点树</div>
+            <Tree
+              onSelect={handleSelect}
+              checkable={false}
+              onCheck={handleCheck}
+              checkedKeys={state.current?._id}
+              loadData={handleLoadChildren}
+              treeData={treeDataWithEarth2}
+            />
+          </div>
+        </div>
       </aside>
       <div className='rc-property-panel'>
         <PropertyPanel value={state.current} onChange={handleChangeCurrent} onChangeParent={handleChangeParent} onSubmit={handleSavePosition} onRemove={handleRemovePosition} />
