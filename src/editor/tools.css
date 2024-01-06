@@ -50,10 +50,10 @@
   position: absolute;
   left: 10px;
   top: 100px;
-  border-right: 1px solid #eee;
-  padding: 10px;
+  /* border-right: 1px solid #eee; */
+  /* padding: 10px; */
   font-size: 12px;
-  background: #fcfcfc;
+  /* background: #fcfcfc; */
 }
 
 .rc-panel-title {
@@ -66,9 +66,38 @@
 .rc-property-panel {
   position: absolute;
   right: 10px;
-  top: 50px;
-  border-right: 1px solid #eee;
-  padding: 10px;
+  top: 100px;
+  /* border-right: 1px solid #eee; */
+  border-radius: 10px;
   font-size: 12px;
-  background: #fcfcfc;
+  /* background: #fcfcfc; */
+  background: rgba(255,255,255,0.90);
+  overflow-y: hidden;
+}
+
+.leaflet-control-zoom{
+  position: absolute;
+  top: 800px;
+  left: 10px;
+  z-Index: 1000;
+}
+
+.rc-property-item{
+  display: flex;
+  align-items: center;
+  margin-top: 10px; 
+  font-size: 13px;
+}
+
+.rc-property-item-label{
+  display: block; 
+  width: 70px;
+  text-align: right;
+  margin-right: 10px;
+}
+
+input{
+  height: 28px;
+  border: 1px solid rgba(0,0,0,0.23);
+  border-radius: 4px;
 }

@@ -113,8 +113,7 @@ function PropertyPanel({ value, onChange, onChangeParent, onSubmit, onRemove }: 
     }
   }
 
-
-  if (!value) return <div>未选中节点</div>
+  if (!value) return <div style={{background: 'rgba(255,255,255,0.90)', padding: '10px 20px', borderRadius: '10px', boxShadow: '0px 4px 4px 0px rgba(0,0,0,0.25)'}}>未选中节点</div>
   return (
     <div>
       <div>
@@ -333,17 +332,23 @@ export default function FullEditor(props: FullEditorProps) {
       {/* <FlowEditor /> */}
       {!parent ? <LocationEditor dbNodeMap={state.nodeMap} dbNodeTree={state.treeData} parent={parentItem} value={state.current} onChange={handleChangeCurrent} /> : <FlowEditor dbNodeMap={state.nodeMap} dbNodeTree={state.treeData} parent={parentItem} value={state.current} onChange={handleChangeCurrent} />}
       <aside className='rc-aside-panel'>
-        <div className='rc-panel-title'>添加节点</div>
-        <div><CreateTools onSelect={handleSelectTool} /></div>
-        <div className='rc-panel-title'>点位节点树</div>
-        <Tree
-          onSelect={handleSelect}
-          checkable={false}
-          onCheck={handleCheck}
-          checkedKeys={state.current?._id}
-          loadData={handleLoadChildren}
-          treeData={treeDataWithEarth2}
-        />
+        <div style={{ background: 'rgba(255,255,255,0.90)', borderRight: '1px solid #eee', padding: '16px 20px', borderRadius: '10px', boxShadow: '0px 4px 4px 0px rgba(0,0,0,0.25)' }}>
+          <div className='rc-panel-title'>添加节点</div>
+          <div><CreateTools onSelect={handleSelectTool} /></div>
+        </div>
+        <div style={{ background: 'rgba(255,255,255,0.90)', marginTop: '20px', borderRadius: '10px', boxShadow: '0px 4px 4px 0px rgba(0,0,0,0.25)', maxHeight: '500px', overflowY: 'hidden' }}>
+          <div style={{ padding: '16px 20px', overflowY: 'scroll' }}>
+            <div className='rc-panel-title'>点位节点树</div>
+            <Tree
+              onSelect={handleSelect}
+              checkable={false}
+              onCheck={handleCheck}
+              checkedKeys={state.current?._id}
+              loadData={handleLoadChildren}
+              treeData={treeDataWithEarth2}
+            />
+          </div>
+        </div>
       </aside>
       <div className='rc-property-panel'>
         <PropertyPanel value={state.current} onChange={handleChangeCurrent} onChangeParent={handleChangeParent} onSubmit={handleSavePosition} onRemove={handleRemovePosition} />
