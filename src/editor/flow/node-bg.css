@@ -3,6 +3,7 @@
   border: 1px dashed #666;
   transform: unset !important;
   background: transparent;
+  pointer-events: none !important;
 }
 
 .text-updater-node label {

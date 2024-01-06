@@ -61,6 +61,10 @@ const onNodeClick = (_: React.MouseEvent, node: Node) => console.log('click', no
 
 const defaultEdgeOptions = {};
 
+function distance(point1: number[], point2: number[]): number {
+  return Math.sqrt((point2[0]-point1[0]) * (point2[0]-point1[0]) + (point2[1]-point1[1]) * (point2[1]-point1[1]))
+}
+
 const onDragOver = (event: React.DragEvent) => {
   event.preventDefault();
   if (event.dataTransfer)
@@ -77,15 +81,23 @@ interface FlowState {
   nodeIdsWithoutCurrent: Identifier[];
   current?: Partial<PositionType>;
   nodes: Node[];
+  editing: boolean; // 是否处于编辑状态.
 }
 
 const BasicFlow = ({ dbNodeMap = {}, dbNodeTree = [], parent, value, onChange }: InnerEditorProps) => {
+
   const [reactFlowInstance, setReactFlowInstance] = React.useState<ReactFlowInstance>();
   const instance = useReactFlow();
   // const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
 
-  const [state, setState] = React.useState<FlowState>({ nodesWithoutCurrent: [], nodeIdsWithoutCurrent: [], nodes: [] });
+  const mode = !value ? 'view' : !value._id ? 'create' : 'edit';
+  const areaType = value?.areaType;
+  const [state, setState] = React.useState<FlowState>({ nodesWithoutCurrent: [], nodeIdsWithoutCurrent: [], nodes: [], editing: false });
 
+  React.useEffect(() => {
+    // 当前节点更新,更新state.current.
+    setState(state => ({ ...state, current: value, editing: false }));
+  }, [value]);
   // 初始化背景节点.
   React.useEffect(() => {
     setState(state => ({
@@ -155,74 +167,177 @@ const BasicFlow = ({ dbNodeMap = {}, dbNodeTree = [], parent, value, onChange }:
     if (state.nodesWithoutCurrent.length > 0) {
       nodes.push(...state.nodesWithoutCurrent);
     }
-    if (value) {
+    if (state.current) {
       nodes.push({
-        id: value?._id || '',
+        id: state.current?._id || '',
         type: 'NodePosition',
         // deletable: false,
         draggable: false,
         selectable: false,
         // connectable: false,
         focusable: false,
-        data: value,
-        position: { x: value?.location?.[0] || 0, y: value?.location?.[1] || 0 },
+        data: state.current,
+        position: { x: state.current?.location?.[0] || 0, y: state.current?.location?.[1] || 0 },
       })
     }
     setState(state => ({ ...state, nodes }));
-  }, [state.nodeBg, state.nodesWithoutCurrent, value]);
+  }, [state.nodeBg, state.nodesWithoutCurrent, state.current]);
 
   const funcs = React.useMemo(() => {
-    return ['onMove', 'onMoveStart', 'onMoveEnd', 'onPaneContextMenu', 'onPaneScroll', 'onPaneMouseMove', 'onPaneMouseEnter', 'onPaneMouseLeave'].reduce((prev: any, item: string) => {
+    return ['onMove', 'onMoveStart', 'onMoveEnd', 'onPaneContextMenu', 'onPaneScroll', 'onPaneMouseEnter', 'onPaneMouseLeave'].reduce((prev: any, item: string) => {
       const func = (evt: any) => {
-        // if (evt) {
-        //   const position = reactFlowInstance?.screenToFlowPosition({
-        //     x: evt.clientX,
-        //     y: evt.clientY,
-        //   });
-        //   console.log('printLog', item, { clientX: evt.clientX, clientY: evt.clientY, screenX: evt.screenX, screenY: evt.screenY }, position, evt);
-        // }
+        if (evt) {
+          const position = reactFlowInstance?.screenToFlowPosition({
+            x: evt.clientX,
+            y: evt.clientY,
+          });
+          console.log(item, position);
+        }
       }
       return { ...prev, [item]: func }
     }, {})
   }, [reactFlowInstance])
   const handlePaneClick = React.useCallback((evt: React.MouseEvent)=>{
-    if (!value) {
+    const position = reactFlowInstance?.screenToFlowPosition({
+      x: evt.clientX,
+      y: evt.clientY,
+    });
+    console.log('handlePaneClick', position);
+    const current = state.current;
+    if (!current) {
       // 当前无节点处于编辑状态.
+      return;
+    }
+    if (!position) {
+      return;
+    }
+    const point = [position.x, position.y];
+    if (current.areaType === 'point') {
+      // location不存在才设置.
+      if (!current.location) {
+        // 点只需要一个点即可,直接提交改变,
+        onChange?.({...current, location: point})
+      }
+    } else if (current.areaType === 'circle') {
+      // 圆,两个点.
+      if (!current.location) {
+        // 圆心不存在,先设置圆心.
+        setState(state => {
+          return {
+            ...state,
+            current: {...state.current, location: point},
+            editing: true
+          }
+        })
+        // onChange?.({...current, location: [position?.x, position?.y]})
+        return;
+      }
+      if (!current.area??undefined) {
+        // area即为半径,如果未设置,表示还在编辑阶段.此时可以设置,并直接提交.
+        const location0 = current.location;
+        const radius = distance(location0, point);
+        // const radius = Math.sqrt((location0[0]-position.x) * (location0[0]-position.x) + (location0[1]-position.y) * (location0[1]-position.y))
+        onChange?.({...current, area: radius});
+      }
+      return;
+    } else if (current.areaType === 'rectangle') {
+      // 矩形,两个点.
+      if (!current.location) {
+        // 第一个点不存在,先设置第一个.
+        setState(state => {
+          return {
+            ...state,
+            current: {...state.current, location: point},
+            editing: true,
+          }
+        })
+        // onChange?.({...current, location: point})
+        return;
+      }
+      if (!current.area??undefined) {
+        // area即为第二个点,如果未设置,表示还在编辑阶段.此时可以设置,并直接提交.
+        onChange?.({...current, area: point})
+      }
+      return;
+    } else if (current.areaType === 'polygon') {
+      // 多边形,至少三个点.
+      if (!current.location) {
+        // 第一个点不存在,先设置第一个.
+        setState(state => {
+          return {
+            ...state,
+            current: {...state.current, location: point},
+            editing: true
+          }
+        })
+        // onChange?.({...current, location: [position?.x, position?.y]})
+        return;
+      }
+      // 设置第二个及其他点.
+      // 判断该点与第一个点的距离,如果小于5,表示完成多边形.
+      if (state.editing) {
+        const distance0  =distance(current.location, point);
+        if (distance0 <= 5) {
+          // 在起始点附近了.结束多边形.
+          setState(state => ({...state, editing: false}));
+          onChange?.({...current, area: [...(current.area||[]), point], areaTemp: undefined})
+        } else {
+          // 多边形增加了一个点.
+          setState(state => ({...state, current: {...current, area: [...(current.area||[]), point], areaTemp: undefined }}));
+        }
+      }
+      return;
+    }
+  },[reactFlowInstance, state.current, state.editing]);
+
+  const handlePaneMouseMove = React.useCallback((evt: React.MouseEvent)=>{
+    // 鼠标移动,触发形状改变.
+    if (!state.editing) {
+      // 非编辑状态.
       return;
     }
     const position = reactFlowInstance?.screenToFlowPosition({
       x: evt.clientX,
       y: evt.clientY,
     });
-    console.log('handlePaneClick', position);
-    if (position) {
-      if (value?.areaType === 'point') {
-        onChange?.({...value, location: [position?.x, position?.y]})
-      } else if (value?.areaType === 'circle') {
-        // 两个点.
-        if (!value?.location) {
-          // 圆心不存在,先设置圆心.
-          onChange?.({...value, location: [position?.x, position?.y]})
-          return;
-        }
-        const location0 = value.location;
-        const radius = Math.sqrt((location0[0]-position.x) * (location0[0]-position.x) + (location0[1]-position.y) * (location0[1]-position.y))
-        onChange?.({...value, area: radius});
-        return;
-      } else if (value?.areaType === 'rectangle') {
-        // 两个点.
-        if (!value?.location) {
-          // 第一个点不存在,先设置第一个.
-          onChange?.({...value, location: [position?.x, position?.y]})
-          return;
-        }
-        // 设置第二个点.
-        onChange?.({...value, area: [position?.x, position?.y]})
-        return;
-      }
+    console.log('handlePaneMouseMove', position);
+    const current = state.current;
+    if (!current) {
+      // 当前无节点处于编辑状态.
+      return;
     }
-  },[reactFlowInstance, value]);
+    if (!position) {
+      return;
+    }
+    const point = [position.x, position.y];
+    const location0 = current.location;
+    if (!location0) {
+      // 已经设置过location才允许改变中间值areaTemp.
+      return;
+    }
 
+    if (current.areaType === 'circle') {
+      // 临时半径
+      const radius = distance(location0, point);
+      setState(state => {
+        return {...state, current: {...(state.current||{}), areaTemp: radius}}
+      })
+      return;
+    } else if (current.areaType === 'rectangle') {
+      // 设置第二个点(临时).
+      setState(state => {
+        return {...state, current: {...(state.current||{}), areaTemp: point}}
+      })
+      return;
+    } else if (current.areaType === 'polygon') {
+      // 多边形,临时点.
+      setState(state => {
+        return {...state, current: {...(state.current||{}), areaTemp: point}}
+      })
+      return;
+    }
+  },[reactFlowInstance, state.current, state.editing]);
+  
   const updatePos = () => {
     instance.setNodes((nodes) =>
       nodes.map((node) => {
@@ -275,7 +390,8 @@ const BasicFlow = ({ dbNodeMap = {}, dbNodeTree = [], parent, value, onChange }:
       nodeTypes={nodeTypes}
       // defaultNodes={initialNodes}
       // defaultEdges={initialEdges}
-      onNodeClick={onNodeClick}
+      onNodeClick={handlePaneClick}
+      // onNodeClick={onNodeClick}
       onNodeDragStop={onNodeDragStop}
       onNodeDrag={onNodeDrag}
       nodes={state.nodes}
@@ -298,7 +414,7 @@ const BasicFlow = ({ dbNodeMap = {}, dbNodeTree = [], parent, value, onChange }:
       onPaneClick={handlePaneClick}
       onPaneContextMenu={funcs?.['onPaneContextMenu']}
       onPaneScroll={funcs?.['onPaneScroll']}
-      onPaneMouseMove={funcs?.['onPaneMouseMove']}
+      onPaneMouseMove={handlePaneMouseMove}
       onPaneMouseEnter={funcs?.['onPaneMouseEnter']}
       onPaneMouseLeave={funcs?.['onPaneMouseLeave']}
 

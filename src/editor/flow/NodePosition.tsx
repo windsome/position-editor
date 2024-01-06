@@ -35,25 +35,30 @@ import { AreaType } from '../types';
 interface RectType {
   x1: number; y1: number; x2: number; y2: number;
 }
+interface ShapeDataType {
+  location: number[]; areaType: AreaType; area: any; areaTemp?: any
+}
 // 计算得到包含该区域的最小矩形,得到左上角,右下角.
-function calcMinRect({ location, areaType, area }: { location: number[], areaType: AreaType, area: any }): RectType | undefined {
+function calcMinRect({ location, areaType, area, areaTemp }: ShapeDataType): RectType | undefined {
   if (!location) return undefined;
   switch (areaType) {
     case 'point': return { x1: location[0] - 5, y1: location[1] - 5, x2: location[0] + 5, y2: location[1] + 5 };
     case 'circle': {
-      let radius = area || 0;
+      let radius = areaTemp || area || 0;
       if (radius < 5) radius = 5;
       return { x1: location[0] - radius, y1: location[1] - radius, x2: location[0] + radius, y2: location[1] + radius }
     }
     case 'rectangle': {
-      if (!area) return { x1: location[0], y1: location[1], x2: location[0], y2: location[1] };
-      const x = location[0] > area[0] ? [area[0], location[0]] : [location[0], area[0]];
-      const y = location[1] > area[1] ? [area[1], location[1]] : [location[1], area[1]];
+      const point2 = areaTemp || area;
+      if (!point2) return { x1: location[0], y1: location[1], x2: location[0], y2: location[1] };
+      const x = location[0] > point2[0] ? [point2[0], location[0]] : [location[0], point2[0]];
+      const y = location[1] > point2[1] ? [point2[1], location[1]] : [location[1], point2[1]];
       return { x1: x[0], y1: y[0], x2: x[1], y2: y[1] };
     }
     case 'polygon': {
-      if (!area) return { x1: location[0], y1: location[1], x2: location[0], y2: location[1] };
-      const { x, y } = area.reduce((prev: { x: number[]; y: number[] }, item: number[]) => {
+      const points = areaTemp ? [...(area || []), areaTemp] : area;
+      if (!points || points.length === 0) return { x1: location[0], y1: location[1], x2: location[0], y2: location[1] };
+      const { x, y } = points.reduce((prev: { x: number[]; y: number[] }, item: number[]) => {
         prev.x.push(item[0]);
         prev.y.push(item[1]);
         return prev;
@@ -64,13 +69,14 @@ function calcMinRect({ location, areaType, area }: { location: number[], areaTyp
   }
 }
 
-function genShapeProps({ location, areaType, area }: { location: number[], areaType: AreaType, area: any }, minRect: RectType): { [key: string]: any } {
+function genShapeProps({ location, areaType, area, areaTemp }: ShapeDataType, minRect: RectType): { [key: string]: any } {
   switch (areaType) {
     case 'point': return { cx: location[0] - minRect.x1, cy: location[1] - minRect.y1, r: 3 };
-    case 'circle': return { cx: location[0] - minRect.x1, cy: location[1] - minRect.y1, r: area };
+    case 'circle': return { cx: location[0] - minRect.x1, cy: location[1] - minRect.y1, r: areaTemp || area || 0 };
     case 'rectangle': return { x: 0, y: 0, width: minRect.x2 - minRect.x1, height: minRect.y2 - minRect.y1 };
     case 'polygon': {
-      const points = [location, ...area].map(item => `${item[0] - minRect.x1},${item[1] - minRect.y1}`).join(' ');
+      const points1 = areaTemp ? [...(area || []), areaTemp] : area || [];
+      const points = [location, ...points1].map(item => `${item[0] - minRect.x1},${item[1] - minRect.y1}`).join(' ');
       return { points };
     }
   }
@@ -84,7 +90,7 @@ const shapeStyle = {
 }
 
 function NodePosition({ data }: any) {
-  const { name, bg, location, areaType } = data || {};
+  const { name, bg, location, areaType, areaTemp } = data || {};
   const { image, matrixString } = bg || {};
   const style = React.useMemo(() => {
     return {
