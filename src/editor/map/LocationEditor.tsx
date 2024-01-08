@@ -22,102 +22,23 @@
 import {
   MapContainer,
   TileLayer,
-  ImageOverlay,
-  Marker,
-  useMap,
-  Popup,
   useMapEvents,
-  Circle,
-  Rectangle,
-  Polygon,
 } from "react-leaflet";
 import * as React from "react";
-import L from "leaflet";
-import newMarker from "./pin.png";
-import isEmpty from 'lodash/isEmpty';
 import "leaflet/dist/leaflet.css";
 import "./location.editor.css";
-import { InnerEditorProps, PositionType, findChildrenIdsByParentId } from "./types";
-// import tileLayer from "../util/tileLayer";
+import { InnerEditorProps, PositionType } from "../types";
+import { findChildrenIdsByParentId } from "../tree";
+import { center, tileLayer_TianDiTu_Satellite_Annotion as tileLayerAnnotion, tileLayer_TianDiTu_Satellite_Map as tileLayerMap } from './mapConst';
+import OnePosition from "./OnePosition";
 
-const center: L.LatLngExpression = [50.0595, 19.9379];
-const tileLayer = {
-  attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors',
-  url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'
-}
-
-const pointerIcon = new L.Icon({
-  iconUrl: newMarker,
-  iconSize: [50, 58], // size of the icon
-  iconAnchor: [20, 58], // changed marker icon position
-  popupAnchor: [0, -60], // changed popup position
-});
-
-
-const fillBlueOptions = { fillColor: 'blue' }
-
-interface OnePositionProps {
-  value: Partial<PositionType>;
-}
-const OnePosition = ({ value }: OnePositionProps) => {
-  // 展示一个节点.
-  const areaType = value.areaType;
-
-  if (areaType === 'point') {
-    return (
-      <Marker
-        key={value._id}
-        position={value.location}
-        draggable={true}
-        eventHandlers={{
-          moveend(e) {
-            const { lat, lng } = e.target.getLatLng();
-            console.log('moveend', lat, lng);
-            // setCurrentCampus(old => {
-            //   // 一个时刻只有一个处于编辑状态. 后续的点击不添加新园区.
-            //   return { ...old, pos: [lat, lng] }
-            // })
-          }
-        }}
-      >
-        <Popup keepInView={true}>
-          <button >{value.name}</button>
-        </Popup>
-      </Marker>
-    )
-  } else if (areaType === 'circle') {
-    return (
-      <Circle center={value.location} pathOptions={fillBlueOptions} radius={value.area || 0} />
-    )
-  } else if (areaType === 'rectangle') {
-    if (value.location && value.area) {
-      const rect = [value.location, value.area];
-      return (
-        <Rectangle bounds={rect} pathOptions={fillBlueOptions} />
-      )
-    } else {
-      return null;
-    }
-  } else if (areaType === 'polygon') {
-    if (value.location) {
-      // area为点列表,不包含第一个点,第一个点为location.
-      let polygon = [value.location, ...(value.area || [])];
-      if (value.polygonTmp) polygon.push(value.polygonTmp)
-      return (
-        <Polygon pathOptions={fillBlueOptions} positions={polygon} />
-      )
-    } else {
-      return null;
-    }
-  }
-}
 
 interface MapInnerState {
   mapDraggable: boolean; // 进入编辑或创建模式前,保存地图是否可以移动的状态.
   editing: boolean; // 是否在编辑状态.
   current?: Partial<PositionType>;
 }
-const MapInner = ({ maxLevel = 1, dbNodeMap = {}, dbNodeTree = [], parent, value, onChange }: InnerEditorProps) => {
+const MapInner = ({ dbNodeMap = {}, dbNodeTree = [], parent, value, onChange }: InnerEditorProps) => {
   // 如何判断当前模式,是创建,编辑还是查看模式?
   // + 当前无选中节点,表示为查看模式.
   // + 当前选中节点无_id,表示创建节点中.
@@ -311,25 +232,24 @@ const MapInner = ({ maxLevel = 1, dbNodeMap = {}, dbNodeTree = [], parent, value
   console.log('MapInner render', { editing: state.editing, mode, count: staticNodes.length }, value);
   return (
     <>
-      <TileLayer {...tileLayer} />
       {staticNodes.map(item => {
         return (
           <OnePosition key={item._id} value={item} />
         )
       })}
-      {state.current?.location ? <OnePosition value={state.current} /> : null}
+      {state.current?.location ? <OnePosition value={state.current} onChange={onChange} /> : null}
     </>
   );
 }
 
 const LocationEditor = (props: InnerEditorProps) => {
   // 目前只处理maxLevel=1的情形.
-  const [map, setMap] = React.useState<any>(null);
+  // const [map, setMap] = React.useState<any>(null);
 
   return (
     <div className="leaflet-wrapper">
       <MapContainer
-        ref={setMap}
+        // ref={setMap}
         // @ts-ignore
         // whenCreated={setMap}
         // whenReady={setMap}
@@ -337,6 +257,8 @@ const LocationEditor = (props: InnerEditorProps) => {
         zoom={15}
         scrollWheelZoom={true}
       >
+        <TileLayer {...tileLayerMap} />
+        <TileLayer {...tileLayerAnnotion} />
         <MapInner {...props} />
       </MapContainer>
     </div>

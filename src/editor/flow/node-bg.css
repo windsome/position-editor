@@ -1,0 +1,13 @@
+.react-flow__node-NodeBg {
+  z-index: -1 !important;
+  border: 1px dashed #666;
+  transform: unset !important;
+  background: transparent;
+  pointer-events: none !important;
+}
+
+.text-updater-node label {
+  display: block;
+  color: #777;
+  font-size: 12px;
+}
